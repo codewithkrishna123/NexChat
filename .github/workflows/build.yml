@@ -1,41 +1,47 @@
-name: NexChat Safe Build Pipeline
+name: NexChat Android CI (Professional)
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
+  pull_request:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. Repo checkout
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      # 1. Checkout source code
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-    # 2. Show project structure (debug)
-    - name: Show files
-      run: |
-        echo "PROJECT STRUCTURE:"
-        ls -R
+      # 2. Setup Java (required for Gradle)
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
 
-    # 3. Run script safely
-    - name: Run script.sh
-      run: |
-        if [ -f script.sh ]; then
-          chmod +x script.sh
-          ./script.sh
-        else
-          echo "script.sh not found"
-        fi
+      # 3. Grant permission for Gradle
+      - name: Make Gradle executable
+        run: chmod +x gradlew
 
-    # 4. Verify result
-    - name: Verify output
-      run: |
-        echo "AFTER SCRIPT RUN:"
-        ls -R
+      # 4. Validate project structure
+      - name: Validate project
+        run: |
+          echo "Checking project structure..."
+          ls -R
 
-    # 5. Safe placeholder build step
-    - name: Build stage (safe)
-      run: |
-        echo "Build pipeline ready - no crash mode enabled"
+      # 5. Clean build
+      - name: Clean project
+        run: ./gradlew clean
+
+      # 6. Build debug APK
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
+
+      # 7. Upload APK artifact
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: NexChat-APK
+          path: app/build/outputs/apk/debug/*.apk
